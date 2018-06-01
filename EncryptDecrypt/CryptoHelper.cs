@@ -32,17 +32,6 @@ namespace EncryptDecrypt
         public static readonly int MinPasswordLength = 12;
 
         /// <summary>
-        /// Helper that generates a random new key on each call.
-        /// </summary>
-        /// <returns></returns>
-        public static byte[] NewKey()
-        {
-            var key = new byte[KeyBitSize / 8];
-            Random.NextBytes(key);
-            return key;
-        }
-
-        /// <summary>
         /// Encryption And Authentication (AES-GCM) of a UTF8 string using key derived from a password (PBKDF2).
         /// </summary>
         /// <param name="secretMessage">The secret message.</param>
