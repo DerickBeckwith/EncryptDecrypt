@@ -46,9 +46,14 @@ namespace EncryptDecrypt
         /// </remarks>
         public static string EncryptWithPassword(string secretMessage, string password, byte[] nonSecretPayload = null)
         {
-            if (string.IsNullOrEmpty(secretMessage))
+            if (string.IsNullOrWhiteSpace(secretMessage))
             {
                 throw new ArgumentException("Secret Message Required!", nameof(secretMessage));
+            }
+
+            if (string.IsNullOrWhiteSpace(password) || password.Length < MinPasswordLength)
+            {
+                throw new ArgumentException($"Must have a password of at least {MinPasswordLength} characters!", nameof(password));
             }
 
             var plainText = Encoding.UTF8.GetBytes(secretMessage);
@@ -77,6 +82,11 @@ namespace EncryptDecrypt
                 throw new ArgumentException("Encrypted Message Required!", nameof(encryptedMessage));
             }
 
+            if (string.IsNullOrWhiteSpace(password) || password.Length < MinPasswordLength)
+            {
+                throw new ArgumentException($"Must have a password of at least {MinPasswordLength} characters!", nameof(password));
+            }
+
             var cipherText = Convert.FromBase64String(encryptedMessage);
             var plainText = DecryptWithPassword(cipherText, password, nonSecretPayloadLength);
 
@@ -97,20 +107,9 @@ namespace EncryptDecrypt
         /// Significantly less secure than using random binary keys.
         /// Adds additional non secret payload for key generation parameters.
         /// </remarks>
-        public static byte[] EncryptWithPassword(byte[] secretMessage, string password, byte[] nonSecretPayload = null)
+        private static byte[] EncryptWithPassword(byte[] secretMessage, string password, byte[] nonSecretPayload = null)
         {
             nonSecretPayload = nonSecretPayload ?? new byte[] { };
-
-            // User Error Checks
-            if (string.IsNullOrWhiteSpace(password) || password.Length < MinPasswordLength)
-            {
-                throw new ArgumentException($"Must have a password of at least {MinPasswordLength} characters!", nameof(password));
-            }
-
-            if (secretMessage == null || secretMessage.Length == 0)
-            {
-                throw new ArgumentException("Secret Message Required!", nameof(secretMessage));
-            }
 
             var generator = new Pkcs5S2ParametersGenerator();
 
@@ -147,19 +146,8 @@ namespace EncryptDecrypt
         /// <remarks>
         /// Significantly less secure than using random binary keys.
         /// </remarks>
-        public static byte[] DecryptWithPassword(byte[] encryptedMessage, string password, int nonSecretPayloadLength = 0)
+        private static byte[] DecryptWithPassword(byte[] encryptedMessage, string password, int nonSecretPayloadLength = 0)
         {
-            // User Error Checks
-            if (string.IsNullOrWhiteSpace(password) || password.Length < MinPasswordLength)
-            {
-                throw new ArgumentException($"Must have a password of at least {MinPasswordLength} characters!", nameof(password));
-            }
-
-            if (encryptedMessage == null || encryptedMessage.Length == 0)
-            {
-                throw new ArgumentException("Encrypted Message Required!", nameof(encryptedMessage));
-            }
-
             var generator = new Pkcs5S2ParametersGenerator();
 
             // Grab Salt from Payload
@@ -187,20 +175,14 @@ namespace EncryptDecrypt
         /// <remarks>
         /// Adds overhead of (Optional-Payload + BlockSize(16) + Message +  HMac-Tag(16)) * 1.33 Base64
         /// </remarks>
-        public static byte[] Encrypt(byte[] secretMessage, byte[] key, byte[] nonSecretPayload = null)
+        private static byte[] Encrypt(byte[] secretMessage, byte[] key, byte[] nonSecretPayload = null)
         {
-            // User Error Checks
+            // Key size check
             if (key == null || key.Length != KeyBitSize / 8)
             {
                 throw new ArgumentException($"Key needs to be {KeyBitSize} bit!", nameof(key));
             }
 
-            if (secretMessage == null || secretMessage.Length == 0)
-            {
-                throw new ArgumentException("Secret Message Required!", nameof(secretMessage));
-            }
-
-            // Non-secret Payload Optional
             nonSecretPayload = nonSecretPayload ?? new byte[] { };
 
             // Using random nonce large enough not to repeat
@@ -242,17 +224,12 @@ namespace EncryptDecrypt
         /// <param name="key">The key.</param>
         /// <param name="nonSecretPayloadLength">Length of the optional non-secret payload.</param>
         /// <returns>Decrypted Message</returns>
-        public static byte[] Decrypt(byte[] encryptedMessage, byte[] key, int nonSecretPayloadLength = 0)
+        private static byte[] Decrypt(byte[] encryptedMessage, byte[] key, int nonSecretPayloadLength = 0)
         {
-            // User Error Checks
+            // Key size check
             if (key == null || key.Length != KeyBitSize / 8)
             {
                 throw new ArgumentException($"Key needs to be {KeyBitSize} bit!", nameof(key));
-            }
-
-            if (encryptedMessage == null || encryptedMessage.Length == 0)
-            {
-                throw new ArgumentException("Encrypted Message Required!", nameof(encryptedMessage));
             }
 
             using (var cipherStream = new MemoryStream(encryptedMessage))
