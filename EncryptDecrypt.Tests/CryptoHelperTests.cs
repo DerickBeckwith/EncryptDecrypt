@@ -9,9 +9,9 @@ namespace EncryptDecrypt.Tests
         private const string Password = "SuperSecretPassword";
 
         [Test]
-        public void EncryptWithPassword_ThrowsArgumentException_WhenSecretMessageIsNull()
+        public void EncryptWithPassword_ThrowsArgumentException_WhenSecretMessageIsEmptyString()
         {
-            Assert.That(() => CryptoHelper.EncryptWithPassword(null, Password), Throws.ArgumentException);
+            Assert.That(() => CryptoHelper.EncryptWithPassword(string.Empty, Password), Throws.ArgumentException);
         }
 
         [Test]
@@ -45,9 +45,9 @@ namespace EncryptDecrypt.Tests
         }
 
         [Test]
-        public void DecryptWithPassword_ThrowsArgumentException_WhenEncryptedMessageIsNull()
+        public void DecryptWithPassword_ThrowsArgumentException_WhenEncryptedMessageIsEmptyString()
         {
-            Assert.That(() => CryptoHelper.DecryptWithPassword(null, Password), Throws.ArgumentException);
+            Assert.That(() => CryptoHelper.DecryptWithPassword(string.Empty, Password), Throws.ArgumentException);
         }
 
         [Test]
