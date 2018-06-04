@@ -97,7 +97,7 @@ namespace EncryptDecrypt
         /// Significantly less secure than using random binary keys.
         /// Adds additional non secret payload for key generation parameters.
         /// </remarks>
-        private static byte[] EncryptWithPassword(byte[] secretMessage, string password, byte[] nonSecretPayload = null)
+        public static byte[] EncryptWithPassword(byte[] secretMessage, string password, byte[] nonSecretPayload = null)
         {
             nonSecretPayload = nonSecretPayload ?? new byte[] { };
 
@@ -147,7 +147,7 @@ namespace EncryptDecrypt
         /// <remarks>
         /// Significantly less secure than using random binary keys.
         /// </remarks>
-        private static byte[] DecryptWithPassword(byte[] encryptedMessage, string password, int nonSecretPayloadLength = 0)
+        public static byte[] DecryptWithPassword(byte[] encryptedMessage, string password, int nonSecretPayloadLength = 0)
         {
             // User Error Checks
             if (string.IsNullOrWhiteSpace(password) || password.Length < MinPasswordLength)
@@ -187,7 +187,7 @@ namespace EncryptDecrypt
         /// <remarks>
         /// Adds overhead of (Optional-Payload + BlockSize(16) + Message +  HMac-Tag(16)) * 1.33 Base64
         /// </remarks>
-        private static byte[] Encrypt(byte[] secretMessage, byte[] key, byte[] nonSecretPayload = null)
+        public static byte[] Encrypt(byte[] secretMessage, byte[] key, byte[] nonSecretPayload = null)
         {
             // User Error Checks
             if (key == null || key.Length != KeyBitSize / 8)
@@ -242,7 +242,7 @@ namespace EncryptDecrypt
         /// <param name="key">The key.</param>
         /// <param name="nonSecretPayloadLength">Length of the optional non-secret payload.</param>
         /// <returns>Decrypted Message</returns>
-        private static byte[] Decrypt(byte[] encryptedMessage, byte[] key, int nonSecretPayloadLength = 0)
+        public static byte[] Decrypt(byte[] encryptedMessage, byte[] key, int nonSecretPayloadLength = 0)
         {
             // User Error Checks
             if (key == null || key.Length != KeyBitSize / 8)
