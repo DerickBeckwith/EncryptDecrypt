@@ -44,14 +44,16 @@ namespace EncryptDecrypt
         /// Significantly less secure than using random binary keys.
         /// Adds additional non secret payload for key generation parameters.
         /// </remarks>
-        public static string EncryptWithPassword(string secretMessage, string password,
-                                                       byte[] nonSecretPayload = null)
+        public static string EncryptWithPassword(string secretMessage, string password, byte[] nonSecretPayload = null)
         {
             if (string.IsNullOrEmpty(secretMessage))
+            {
                 throw new ArgumentException("Secret Message Required!", nameof(secretMessage));
+            }
 
             var plainText = Encoding.UTF8.GetBytes(secretMessage);
             var cipherText = EncryptWithPassword(plainText, password, nonSecretPayload);
+
             return Convert.ToBase64String(cipherText);
         }
 
@@ -68,14 +70,16 @@ namespace EncryptDecrypt
         /// <remarks>
         /// Significantly less secure than using random binary keys.
         /// </remarks>
-        public static string DecryptWithPassword(string encryptedMessage, string password,
-                                                       int nonSecretPayloadLength = 0)
+        public static string DecryptWithPassword(string encryptedMessage, string password, int nonSecretPayloadLength = 0)
         {
             if (string.IsNullOrWhiteSpace(encryptedMessage))
+            {
                 throw new ArgumentException("Encrypted Message Required!", nameof(encryptedMessage));
+            }
 
             var cipherText = Convert.FromBase64String(encryptedMessage);
             var plainText = DecryptWithPassword(cipherText, password, nonSecretPayloadLength);
+
             return plainText == null ? null : Encoding.UTF8.GetString(plainText);
         }
 
@@ -99,10 +103,14 @@ namespace EncryptDecrypt
 
             // User Error Checks
             if (string.IsNullOrWhiteSpace(password) || password.Length < MinPasswordLength)
+            {
                 throw new ArgumentException($"Must have a password of at least {MinPasswordLength} characters!", nameof(password));
+            }
 
             if (secretMessage == null || secretMessage.Length == 0)
+            {
                 throw new ArgumentException("Secret Message Required!", nameof(secretMessage));
+            }
 
             var generator = new Pkcs5S2ParametersGenerator();
 
@@ -143,10 +151,14 @@ namespace EncryptDecrypt
         {
             // User Error Checks
             if (string.IsNullOrWhiteSpace(password) || password.Length < MinPasswordLength)
+            {
                 throw new ArgumentException($"Must have a password of at least {MinPasswordLength} characters!", nameof(password));
+            }
 
             if (encryptedMessage == null || encryptedMessage.Length == 0)
+            {
                 throw new ArgumentException("Encrypted Message Required!", nameof(encryptedMessage));
+            }
 
             var generator = new Pkcs5S2ParametersGenerator();
 
@@ -179,10 +191,14 @@ namespace EncryptDecrypt
         {
             // User Error Checks
             if (key == null || key.Length != KeyBitSize / 8)
+            {
                 throw new ArgumentException($"Key needs to be {KeyBitSize} bit!", nameof(key));
+            }
 
             if (secretMessage == null || secretMessage.Length == 0)
+            {
                 throw new ArgumentException("Secret Message Required!", nameof(secretMessage));
+            }
 
             // Non-secret Payload Optional
             nonSecretPayload = nonSecretPayload ?? new byte[] { };
@@ -207,11 +223,14 @@ namespace EncryptDecrypt
                 {
                     // Prepend Authenticated Payload
                     binaryWriter.Write(nonSecretPayload);
+
                     // Prepend Nonce
                     binaryWriter.Write(nonce);
+
                     // Write Cipher Text
                     binaryWriter.Write(cipherText);
                 }
+
                 return combinedStream.ToArray();
             }
         }
@@ -227,41 +246,47 @@ namespace EncryptDecrypt
         {
             // User Error Checks
             if (key == null || key.Length != KeyBitSize / 8)
+            {
                 throw new ArgumentException($"Key needs to be {KeyBitSize} bit!", nameof(key));
+            }
 
             if (encryptedMessage == null || encryptedMessage.Length == 0)
+            {
                 throw new ArgumentException("Encrypted Message Required!", nameof(encryptedMessage));
+            }
 
             using (var cipherStream = new MemoryStream(encryptedMessage))
-            using (var cipherReader = new BinaryReader(cipherStream))
             {
-                // Grab Payload
-                var nonSecretPayload = cipherReader.ReadBytes(nonSecretPayloadLength);
-
-                // Grab Nonce
-                var nonce = cipherReader.ReadBytes(NonceBitSize / 8);
-
-                var cipher = new GcmBlockCipher(new AesEngine());
-                var parameters = new AeadParameters(new KeyParameter(key), MacBitSize, nonce, nonSecretPayload);
-                cipher.Init(false, parameters);
-
-                // Decrypt Cipher Text
-                var cipherText = cipherReader.ReadBytes(encryptedMessage.Length - nonSecretPayloadLength - nonce.Length);
-                var plainText = new byte[cipher.GetOutputSize(cipherText.Length)];
-
-                try
+                using (var cipherReader = new BinaryReader(cipherStream))
                 {
-                    var len = cipher.ProcessBytes(cipherText, 0, cipherText.Length, plainText, 0);
-                    cipher.DoFinal(plainText, len);
+                    // Grab Payload
+                    var nonSecretPayload = cipherReader.ReadBytes(nonSecretPayloadLength);
 
-                }
-                catch (InvalidCipherTextException)
-                {
-                    // Return null if it doesn't authenticate
-                    return null;
-                }
+                    // Grab Nonce
+                    var nonce = cipherReader.ReadBytes(NonceBitSize / 8);
 
-                return plainText;
+                    var cipher = new GcmBlockCipher(new AesEngine());
+                    var parameters = new AeadParameters(new KeyParameter(key), MacBitSize, nonce, nonSecretPayload);
+                    cipher.Init(false, parameters);
+
+                    // Decrypt Cipher Text
+                    var cipherText = cipherReader.ReadBytes(encryptedMessage.Length - nonSecretPayloadLength - nonce.Length);
+                    var plainText = new byte[cipher.GetOutputSize(cipherText.Length)];
+
+                    try
+                    {
+                        var len = cipher.ProcessBytes(cipherText, 0, cipherText.Length, plainText, 0);
+                        cipher.DoFinal(plainText, len);
+
+                    }
+                    catch (InvalidCipherTextException)
+                    {
+                        // Return null if it doesn't authenticate
+                        return null;
+                    }
+
+                    return plainText;
+                }
             }
         }
     }
