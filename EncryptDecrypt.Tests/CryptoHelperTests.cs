@@ -7,11 +7,34 @@ namespace EncryptDecrypt.Tests
     {
         private const string SecretMessage = "Secret Message";
         private const string Password = "SuperSecretPassword";
+        private const string ShortPassword = "Pass";
+
+        [Test]
+        public void Password_MeetsMinimumLengthRequirement()
+        {
+            // Assert
+            Assert.GreaterOrEqual(Password.Length, CryptoHelper.MinPasswordLength);
+        }
+
+        [Test]
+        public void ShortPassword_FailsMinimumLengthRequirement()
+        {
+            // Assert
+            Assert.Less(ShortPassword.Length, CryptoHelper.MinPasswordLength);
+        }
 
         [Test]
         public void EncryptWithPassword_ThrowsArgumentException_WhenSecretMessageIsEmptyString()
         {
+            // Act and Assert
             Assert.That(() => CryptoHelper.EncryptWithPassword(string.Empty, Password), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void EncryptWithPassword_ThrowsArgumentException_WhenPasswordLengthIsLessThanMinimum()
+        {
+            // Act and Assert
+            Assert.That(() => CryptoHelper.EncryptWithPassword(SecretMessage, ShortPassword), Throws.ArgumentException);
         }
 
         [Test]
@@ -38,7 +61,18 @@ namespace EncryptDecrypt.Tests
         [Test]
         public void DecryptWithPassword_ThrowsArgumentException_WhenEncryptedMessageIsEmptyString()
         {
+            // Act and Assert
             Assert.That(() => CryptoHelper.DecryptWithPassword(string.Empty, Password), Throws.ArgumentException);
+        }
+
+        [Test]
+        public void DecryptWithPassword_ThrowsArgumentException_WhenPasswordLengthIsLessThanMinimum()
+        {
+            // Arrange
+            var cipher = CryptoHelper.EncryptWithPassword(SecretMessage, Password);
+
+            // Act and Assert
+            Assert.That(() => CryptoHelper.DecryptWithPassword(cipher, ShortPassword), Throws.ArgumentException);
         }
 
         [Test]
